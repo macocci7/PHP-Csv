@@ -4,10 +4,19 @@ namespace Macocci7\PhpCsv;
 
 class Csv
 {
+    /**
+     * csv data as an array
+     */
     protected $csv;
-    protected $headline;
-    protected $offset;
-    protected $columns;
+
+    /**
+     * offset of rows
+     */
+    protected $offsetRow;
+
+    /**
+     * cast type
+     */
     protected $castType;
 
     /**
@@ -18,6 +27,7 @@ class Csv
         if (!is_null($path)) {
             $this->load($path);
         }
+        return $this;
     }
 
     /**
@@ -99,7 +109,7 @@ class Csv
      * @param
      * @return  integer
      */
-    public function rows()
+    public function countRows()
     {
         return count($this->csv);
     }
@@ -109,7 +119,7 @@ class Csv
      * @param
      * @return  integer
      */
-    public function columns()
+    public function countColumns()
     {
         return max(array_map('count', $this->csv));
     }
@@ -147,7 +157,6 @@ class Csv
         return $this;
     }
 
-
     /**
      * sets casting type as string
      * @param
@@ -171,16 +180,16 @@ class Csv
     }
 
     /**
-     * sets offset of lines to skip
-     * @param   int $offset
+     * sets offset of rows to skip
+     * @param   int $offsetRow
      * @return  self
      */
-    public function offset(int $offset)
+    public function offsetRow(int $offsetRow)
     {
-        if ($offset < 0) {
+        if ($offsetRow < 0) {
             throw new \Exception('specify a natural number.');
         }
-        $this->offset = $offset;
+        $this->offsetRow = $offsetRow;
         return $this;
     }
 
@@ -210,13 +219,13 @@ class Csv
      */
     public function column(int $column)
     {
-        if ($column < 0) {
+        if ($column < 1 || $column > $this->countColumns()) {
             return;
         }
-        $csv = $this->offset
-             ? array_slice($this->csv, $this->offset)
+        $csv = $this->offsetRow
+             ? array_slice($this->csv, $this->offsetRow)
              : $this->csv;
-        $data = array_column($csv, $column);
+        $data = array_column($csv, $column - 1);
         if (!$data) {
             return;
         }
@@ -281,7 +290,11 @@ class Csv
 
     public function cell()
 
+    public function rows()
+
     public function rowsBetween()
+
+    public function columns()
 
     public function columnByName()
 
@@ -314,5 +327,7 @@ class Csv
     public function swapRows()
 
     public function swapColumns()
+
+    public function groupBy()
     */
 }
