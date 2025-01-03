@@ -6,50 +6,56 @@ class Csv
 {
     /**
      * csv data as an array
+     * @var array<int, string[]>|null
      */
-    protected $csv;
+    protected array|null $csv = null;
 
     /**
      * offset of rows
      */
-    protected $offsetRow;
+    protected int $offsetRow = 0;
 
     /**
      * cast type
      */
-    protected $castType;
+    protected string|null $castType = null;
 
     /**
      * constructor
+     * @param   string|null $path
      */
-    public function __construct(string $path = null)
+    public function __construct(string|null $path = null)
     {
         if (!is_null($path)) {
             $this->load($path);
         }
-        return $this;
     }
 
     /**
      * loads csv fromt $path
      * @param   string  $path
      * @return  self
+     * @thrown  \Exception
      */
     public function load(string $path)
     {
         if (!file_exists($path)) {
             throw new \Exception('File does not exist:[' . $path . ']');
         }
-        $this->csv = array_map('str_getcsv', file($path));
+        $this->csv = array_map(
+            fn ($fn) => str_getcsv($fn, ",", "\"", "\\"),
+            file($path)
+        );
         return $this;
     }
 
     /**
      * saves $this->csv into a csv file
-     * @param   string  $path
+     * @param   string|null $path
      * @return  self
+     * @thrown  \Exception
      */
-    public function save(string $path = null)
+    public function save(string|null $path = null)
     {
         if (is_null($path)) {
             $path = $this->newFilename();
@@ -71,7 +77,6 @@ class Csv
 
     /**
      * returns a new file name
-     * @param
      * @return  string
      */
     public function newFilename()
@@ -106,27 +111,24 @@ class Csv
 
     /**
      * returns rows of csv
-     * @param
-     * @return  integer
+     * @return  int
      */
     public function countRows()
     {
-        return count($this->csv);
+        return is_null($this->csv) ? 0 : count($this->csv);
     }
 
     /**
      * returns (max) columns of csv
-     * @param
-     * @return  integer
+     * @return  int
      */
     public function countColumns()
     {
-        return max(array_map('count', $this->csv));
+        return is_null($this->csv) ? 0 : max(array_map('count', $this->csv));
     }
 
     /**
      * sets casting type as bool
-     * @param
      * @return self
      */
     public function bool()
@@ -137,7 +139,6 @@ class Csv
 
     /**
      * sets casting type as integer
-     * @param
      * @return  self
      */
     public function int()
@@ -148,7 +149,6 @@ class Csv
 
     /**
      * sets casting type as float
-     * @param
      * @return  self
      */
     public function float()
@@ -159,7 +159,6 @@ class Csv
 
     /**
      * sets casting type as string
-     * @param
      * @return  self
      */
     public function string()
@@ -170,7 +169,6 @@ class Csv
 
     /**
      * sets casting type as raw data
-     * @param
      * @return  self
      */
     public function raw()
@@ -180,69 +178,100 @@ class Csv
     }
 
     /**
-     * sets offset of rows to skip
-     * @param   int $offsetRow
-     * @return  self
+     * returns current cast type
+     * @return  string| null
      */
-    public function offsetRow(int $offsetRow)
+    public function castType()
     {
+        return $this->castType;
+    }
+
+    /**
+     * sets offset of rows to skip
+     * @param   int|null $offsetRow = null
+     * @return  self|int
+     * @thrown  \Exception
+     */
+    public function offsetRow(int|null $offsetRow = null)
+    {
+        if (is_null($offsetRow)) {
+            return $this->offsetRow;
+        }
         if ($offsetRow < 0) {
-            throw new \Exception('specify a natural number.');
+            throw new \Exception('Offset must be a natural number or zero.');
         }
         $this->offsetRow = $offsetRow;
         return $this;
     }
 
     /**
+     * casts the value as specified type
+     * @param   bool|int|float|string   $value
+     * @return  bool|int|float|string
+     */
+    public function cast(bool|int|float|string $value)
+    {
+        return match ($this->castType) {
+            "bool" => (bool) $value,
+            "int" => (int) $value,
+            "float" => (float) $value,
+            "string" => (string) $value,
+            default => $value,
+        };
+    }
+
+    /**
+     * casts a row
+     * @param   array<int, bool|int|float|string>   $row
+     * @return  array<int, bool|int|float|string>
+     */
+    public function castRow(array $row)
+    {
+        return array_map(
+            fn ($value) => $this->cast($value),
+            $row
+        );
+    }
+
+    /**
      * returns the ($row)th row
      * @param   int $row
-     * @return  array
+     * @return  array<int, bool|int|float|string>|null
      */
     public function row(int $row)
     {
         if ($row < 1) {
-            return;
+            return null;
         }
         if (empty($this->csv)) {
-            return;
+            return null;
         }
         if ($row > count($this->csv)) {
-            return;
+            return null;
         }
-        return $this->csv[$row - 1];
+        return $this->castRow($this->csv[$row - 1]);
     }
 
     /**
      * returns ($column)th column
      * @param   int $column
-     * @return  array
+     * @return  array<int, bool|int|float|string>|null
      */
     public function column(int $column)
     {
         if ($column < 1 || $column > $this->countColumns()) {
-            return;
+            return null;
         }
         $csv = $this->offsetRow
              ? array_slice($this->csv, $this->offsetRow)
              : $this->csv;
         $data = array_column($csv, $column - 1);
         if (!$data) {
-            return;
+            return null;
         }
         if ($this->castType) {
             foreach ($data as $index => $value) {
-                if (0 === strcmp('bool', $this->castType)) {
-                    $data[$index] = (bool) $value;
-                }
-                if (0 === strcmp('int', $this->castType)) {
-                    $data[$index] = (int) $value;
-                }
-                if (0 === strcmp('float', $this->castType)) {
-                    $data[$index] = (float) $value;
-                }
-                if (0 === strcmp('string', $this->castType)) {
-                    $data[$index] = (string) $value;
-                }
+                $data[$index] = $this->cast($value);
             }
         }
         return $data;
@@ -250,21 +279,22 @@ class Csv
 
     /**
      * dumps $this->csv as csv
-     * @param
      * @return  string
      */
     public function dump()
     {
-        $f = function ($line): string {
-            return '"' . implode('","', $line) . '"';
-        };
-        return implode("\n", array_map($f, $this->csv));
+        return is_null($this->csv) ? null : implode(
+            PHP_EOL,
+            array_map(
+                fn ($row) => '"' . implode('","', $row) . '"',
+                $this->csv
+            )
+        );
     }
 
     /**
-     * returns csv as an array]
-     * @param
-     * @return  array
+     * returns csv as an array
+     * @return  array<int, string[]>
      */
     public function dumpArray()
     {
@@ -273,7 +303,6 @@ class Csv
 
     /**
      * clears loaded csv data
-     * @param
      * @return  self
      */
     public function clear()
@@ -283,51 +312,91 @@ class Csv
     }
 
     /**
-     * future version
+     * returns the value of the specified cell
+     * @param   int $row
+     * @param   int $column
+     * @return  bool|int|float|string|null
      */
-    /*
-    public function dumpHash()
+    public function cell(int $row, int $column)
+    {
+        $ir = $this->offsetRow + $row - 1;
+        $ic = $column - 1;
+        return isset($this->csv[$ir][$ic])
+            ? $this->cast($this->csv[$ir][$ic])
+            : null;
+    }
 
-    public function cell()
+    /**
+     * returns rows in specified range
+     * @param   int $start
+     * @param   int $end
+     * @return  array<int, array<int, bool|int|float|string>>|null
+     */
+    public function rowsBetween(int $start, int $end)
+    {
+        if (is_null($this->csv) || $start > $end) {
+            return null;
+        }
+        $is = $this->offsetRow + $start - 1;
+        $ie = $this->offsetRow + $end - 1;
+        $rows = [];
+        for ($i = $is; $i <= $ie; $i++) {
+            if (isset($this->csv[$i])) {
+                $rows[$i] = $this->castRow($this->csv[$i]);
+            }
+        }
+        return $rows;
+    }
 
-    public function rows()
+    /**
+     * returns first $n rows
+     * @param   int $n
+     * @return  array<int, array<int, bool|int|float|string>>|null
+     */
+    public function rows(int $n)
+    {
+        return $this->rowsBetween(1, $n);
+    }
 
-    public function rowsBetween()
+    /**
+     * returns $n rows from the beginning of csv
+     * @param   int $n = 5
+     * @return  array<int, array<int, bool|int|float|string>>|null
+     */
+    public function head(int $n = 5)
+    {
+        if (is_null($this->csv) || $n < 1) {
+            return null;
+        }
+        $is = 0;
+        $ie = $n - 1;
+        $rows = [];
+        for ($i = $is; $i <= $ie; $i++) {
+            if (isset($this->csv[$i])) {
+                $rows[$i] = $this->castRow($this->csv[$i]);
+            }
+        }
+        return $rows;
+    }
 
-    public function columns()
-
-    public function columnByName()
-
-    public function columnsByNames()
-
-    public function columnsBetween()
-
-    public function deleteRows()
-
-    public function deleteColumns()
-
-    public function range()
-
-    public function appendRows()
-
-    public function appendColumns()
-
-    public function insertRows()
-
-    public function insertColumns()
-
-    public function replaceCell()
-
-    public function replaceRow()
-
-    public function replaceColumn()
-
-    public function swapCells()
-
-    public function swapRows()
-
-    public function swapColumns()
-
-    public function groupBy()
-    */
+    /**
+     * returns $n rows from the end of csv
+     * @param   int $n = 5
+     * @return  array<int, array<int, bool|int|float|string>>|null
+     */
+    public function tail(int $n = 5)
+    {
+        if (is_null($this->csv) || $n < 1) {
+            return null;
+        }
+        $ie = $this->countRows() - 1;
+        $is = $ie - $n + 1;
+        $rows = [];
+        for ($i = $is; $i <= $ie; $i++) {
+            if (isset($this->csv[$i])) {
+                $rows[$i] = $this->castRow($this->csv[$i]);
+            }
+        }
+        return $rows;
+    }
 }

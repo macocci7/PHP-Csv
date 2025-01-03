@@ -11,7 +11,7 @@ A simple PHP library for csv operation.
 
 ## Requirements
 
-- PHP 8.0.0 (CLI) or later
+- PHP 8.1 (CLI) or later
 - Composer
 
 ## Installation
@@ -80,25 +80,32 @@ composer require macocci7/php-csv
     ```
 
 ## Methods
-- load(): loads csv specified by the param
-- save(): saves data into a csv file specified by the param
-- encode(): encodes loaded csv data
-- countRows(): returns the count of rows of the csv
-- countColumns(): returns the max count of columns of the csv
-- bool(): specify the cast type for column() as (bool)
-- int(): specify the cast type for column() as (int)
-- float(): specify the cast type for column() as (float)
-- string(): specify the cast type for column() as (string)
-- raw(): unset the cast type for column()
-- offsetRow(): specify offset of rows for column()
-- row(): retrieve the specified row as an array
-- column(): retrieve the specified column as an array
-- dump(): returns all data as csv
-- dumpArray(): returns all data as an array
+- `load()`: loads csv specified by the param
+- `save()`: saves data into a csv file specified by the param
+- `encode()`: encodes loaded csv data
+- `countRows()`: returns the count of rows of the csv
+- `countColumns()`: returns the max count of columns of the csv
+- `bool()`: specify the cast type as (`bool`)
+- `int()`: specify the cast type as (`int`)
+- `float()`: specify the cast type as (`float`)
+- `string()`: specify the cast type as (`string`)
+- `raw()`: unset the cast type
+- `castType()`: returns current cast type
+- `offsetRow()`: specify offset of rows
+- `row()`: retrieve the specified row as an array
+- `column()`: retrieve the specified column as an array
+- `dump()`: returns all data as csv
+- `dumpArray()`: returns all data as an array
+- `clear()`: clears loaded csv data
+- `cell()`: returns the value in the cell
+- `rowsBetween()`: returns rows between specified row numbers
+- `rows()`: returns first `$n` rows.
+- `head()`: returns `$n` rows from the beginning of csv
+- `tail()`: returns `$n` rows from the end of csv
 
 ## Examples
 
-- [UseCsv.php](example/UseCsv.php) results in >> [UseCsv.txt](example/UseCsv.txt)
+- [UseCsv.php](examples/UseCsv.php) results in >> [UseCsv.txt](examples/UseCsv.txt)
 
 ## LICENSE
 
@@ -108,4 +115,6 @@ composer require macocci7/php-csv
 
 *Document Created 2023/11/10*
 
-*Document Updated 2023/11/15*
+*Document Updated 2025/01/03*
+
+Copyright 2023-2025 macocci7.
