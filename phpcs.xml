@@ -20,7 +20,7 @@
 
     <!-- 対象のファイル、ディレクトリ -->
     <file>src</file>
-    <file>example</file>
+    <file>examples</file>
     <file>tests</file>
 
     <!-- 除外ファイル、ディレクトリ -->
