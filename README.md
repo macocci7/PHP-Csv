@@ -113,8 +113,4 @@ composer require macocci7/php-csv
 
 ***
 
-*Document Created 2023/11/10*
-
-*Document Updated 2025/01/03*
-
 Copyright 2023-2025 macocci7.
