@@ -5,11 +5,11 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use Macocci7\PhpCsv\Csv;
 
 // load a csv
-$filename = 'csv/weather_tokyo_2023nov_sjis.csv';
+$filename = __DIR__ . '/csv/weather_tokyo_2023nov_sjis.csv';
 $csv = new Csv($filename);
 
 // encode data and save it
-$csv->encode('SJIS', 'UTF-8')->save('csv/weather_tokyo_2023nov_utf8.csv');
+$csv->encode('SJIS', 'UTF-8')->save(__DIR__ . '/csv/weather_tokyo_2023nov_utf8.csv');
 
 // properties
 echo sprintf(
